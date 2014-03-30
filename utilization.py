@@ -4,11 +4,11 @@ import json
 # file to store list of hours in json format
 HOURS_FILE = "my_hours.json"
 
-# IBB internal project lables
-LABLE_PTO = "PTO"
-LABLE_HOLIDAY = "Holiday"
-LABLE_TRAINING = "Training"
-LABLE_UNUTILIZED = "Unutilized"
+# IBB internal project LABELs
+LABEL_PTO = "PTO"
+LABEL_HOLIDAY = "Holiday"
+LABEL_TRAINING = "Training"
+LABEL_UNUTILIZED = "Unutilized"
 
 # not used yet
 HOLIDAY_DAYS = ['1/1', '1/20', '2/17', '5/26', '7/4', '9/1', '11/27', '11/28', '12/25', '12/26']
@@ -25,9 +25,8 @@ def persist_hours(hours, db_file=HOURS_FILE):
 
 def read_hours(db_file=HOURS_FILE):
 	hours = []
-	with open(db_file, "r") as fh:
-		for line in fh.readlines():
-			hours.append(json.loads(line))
+	for line in open(db_file, "r"):
+		hours.append(json.loads(line))
 	return hours
 
 def get_project_hours(hours, project=None):
@@ -43,20 +42,25 @@ def is_project(expected, actual):
 		return True
 	return expected == actual
 
-def get_utilization(hours):
+def get_utilized_hours(hours):
 	total = get_project_hours(hours)
-	pto = get_project_hours(hours, LABLE_PTO)
-	holiday = get_project_hours(hours, LABLE_HOLIDAY)
-	training = get_project_hours(hours, LABLE_TRAINING)
-	unutilized = get_project_hours(hours, LABLE_UNUTILIZED)
-	return {'Total': total, LABLE_PTO: pto, LABLE_HOLIDAY: holiday,
-		LABLE_TRAINING: training, LABLE_UNUTILIZED: unutilized}
+	pto = get_project_hours(hours, LABEL_PTO)
+	holiday = get_project_hours(hours, LABEL_HOLIDAY)
+	training = get_project_hours(hours, LABEL_TRAINING)
+	utilizable = get_project_hours(hours) - (pto + holiday + training)
+	unutilized = get_project_hours(hours, LABEL_UNUTILIZED)
+	return utilizable - unutilized
 
 # create a class for data structure
 # read in list of classes
 # create new class from command line args
 # add serialize method on class - write itself from a file, then read itself from file
 # class knows how to persist itself
+
+# create timesheet class, holds 7 days
+# is iterable, implements next
+# def __iter__(self): returns Day
+# def next(self): returns mon, tue, wed, thu ...
 
 def dummy_data():
 	persist_hours(new_hours('3/17', 'Holiday', 'NY', 8))
@@ -75,9 +79,10 @@ def main():
 	hours = read_hours()
 	#print hours
 	print "Total hours:    {}".format(get_project_hours(hours))
-	print "PTO hours:      {}".format(get_project_hours(hours, LABLE_PTO))
-	print "Holiday hours:  {}".format(get_project_hours(hours, LABLE_HOLIDAY))
-	print "Training hours: {}".format(get_project_hours(hours, LABLE_TRAINING))
+	print "PTO hours:      {}".format(get_project_hours(hours, LABEL_PTO))
+	print "Holiday hours:  {}".format(get_project_hours(hours, LABEL_HOLIDAY))
+	print "Training hours: {}".format(get_project_hours(hours, LABEL_TRAINING))
 
+	print "Utilized: {}".format(get_utilized_hours(hours))
 if __name__ == '__main__':
 	main()
